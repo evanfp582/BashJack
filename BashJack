@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+echo "Running BashJack"
+
+
+cards="$(cat unshuffled_cards.txt)"
+echo "All cards: $cards"
+
+for i in $cards
+do
+	echo "Cards: $i"
+done
