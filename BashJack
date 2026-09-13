@@ -1,12 +1,42 @@
 #!/usr/bin/env bash
 
+. ./shuffle
+
 echo "Running BashJack"
 
+NUM_OF_DECKS=1
+full_deck=$(build_deck $NUM_OF_DECKS)
+cards_arr=( $(shuf -e $full_deck) )
 
-cards="$(cat unshuffled_cards.txt)"
-echo "All cards: $cards"
+while read -r response; do
 
-for i in $cards
-do
-	echo "Cards: $i"
+    case $response in
+        "meow")
+            echo "wtf did you just meow"
+            ;;
+        "draw"|"yes"|"y"|"d")
+            top_card="${cards_arr[0]}"
+            cards_slice="${cards_arr[@]:1}"
+            cards_arr=($cards_slice)
+            echo $words
+            echo "Top card: $top_card"
+	    remainder=${cards_arr[@]}
+            echo "Remainder: $remainder"
+
+	    # Automatically create a new deck if I run out of cards 
+	    if [ -z $cards_arr ]; then
+		echo "Oops all out of cards, shuffling cards"
+		cards_arr=( $(shuf -e $full_deck) )
+	    fi
+
+            ;;
+        "quit"|"exit"|"q")
+            echo "Leaving the program"
+            break
+            ;;
+        *)
+            echo "What do you mean"
+            ;;
+    esac
 done
+

@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+
+#echo "Running shuffle code"
+
+
+CARD_FILE="cards.txt"
+
+
+function shuffle() {
+    local full_deck=$1
+    local deck=( $(shuf -e "${full_deck}") )
+    echo ${deck[@]}
+}
+
+
+function build_deck() {
+    local quan=$1
+    local cards=$(cat $CARD_FILE)
+    for i in $(seq 1 $quan); do
+        echo "${cards[@]}"
+    done
+}
+
+function draw_card() { 
+    top_card="${cards_arr[0]}"
+    cards_slice="${cards_arr[@]:1}"
+    cards_arr=($cards_slice)
+    echo "$top_card"
+}
+
