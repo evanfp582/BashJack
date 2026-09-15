@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+. ./shuffle
+. ./card
+
+
+function draw_deck() {
+	local deck_num=$1
+	local full_deck=$(build_deck $deck_num)
+	local cards_arr=( $(shuf -e $full_deck) )
+	echo ${cards_arr[@]}
+}
+
+function deck_input() {
+	local card_arr=( $1 )
+	read -r response;
+	case $response in
+		"draw"|"yes"|"y"|"d")
+        		local top_card="${card_arr[0]}"
+		        local card_slice="${card_arr[@]:1}"
+		        local card_arr=($card_slice)
+			
+			#echo "Top card: $top_card"
+
+			#remainder=${card_arr[@]}
+		        #echo "Remainder: $remainder"
+	    
+			echo $top_card
+		        ;;
+		"quit"|"exit"|"q")
+			echo "Leaving the program"
+			break
+			;;
+   		*)
+        		echo "What do you mean"
+		        ;;
+	esac
+}
+
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+	echo "Running test code"
+	deck=$(draw_deck 1)
+	echo ${deck[@]}
+	(deck_input "${deck[@]}")
+fi

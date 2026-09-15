@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+
+function card_value() {
+    local card=$1
+    local card_value=${card:0:-1}
+    case $card_value in
+	    [[:digit:]]*)
+	    echo "$card_value"
+	    ;;
+    	"A")
+	    # Ace can be 1 or 11 
+	    echo "11"
+	    ;;
+    	"J"|"Q"|"K")
+	    echo "10"
+	    ;;
+	*)
+	    echo "What kind of deck are you using"
+	    ;;
+    esac
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    echo "Running test code"
+    card_value AD
+    card_value 7S
+    card_value 10D
+    card_value KH
+    card_value 2H
+fi

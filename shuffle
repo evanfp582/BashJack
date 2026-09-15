@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 
-
-#echo "Running shuffle code"
-
-
+# Constants
 CARD_FILE="cards.txt"
 
 
@@ -20,12 +17,5 @@ function build_deck() {
     for i in $(seq 1 $quan); do
         echo "${cards[@]}"
     done
-}
-
-function draw_card() { 
-    top_card="${cards_arr[0]}"
-    cards_slice="${cards_arr[@]:1}"
-    cards_arr=($cards_slice)
-    echo "$top_card"
 }
 
