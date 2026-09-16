@@ -6,18 +6,41 @@
 # Constants
 NUM_OF_DECKS=1
 
-echo "Running BashJack"
+function main() {
+	deck=( $(draw_deck $NUM_OF_DECKS) )
+	while true; do
+		printf 'Action: '
+		#read -r res
+		#card=$(echo $res | deck_input "${deck[@]}")
+		
+		read -r response;
+        	case $response in
+                	"draw"|"yes"|"y"|"d")
+                        	local top_card="${deck[0]}"
+				local card_slice="${deck[@]:1}"
+				deck=( $card_slice )
+                        	
+				remainder=${deck[@]}
+				echo "Remainder: $remainder"
+				
+				echo "You drew $top_card"
+				card_val=$(card_value $top_card)
+				echo "That card has a blackjack value of $card_val"
+				;;
+			"quit"|"exit"|"q")
+				echo "Leaving the program"
+				break
+				;;
+			*)
+				echo "What do you mean"
+				;;
+		esac
+	done
+}
 
-echo "Building deck"
 
-deck=$(draw_deck $NUM_OF_DECKS)
-
-while true; do
-	printf 'Action: '
-	read -r res
-	card=$(echo $res | deck_input "${deck[@]}")
-	echo "You drew $card"
-	card_val=$(card_value $card)
-	echo "That card has a blackjack value of $card_val"
-done
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+        echo "Running BlackJack"
+	main
+fi
 
