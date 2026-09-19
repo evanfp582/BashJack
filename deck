@@ -13,6 +13,8 @@ function draw_deck() {
 
 function deck_input() {
 	local card_arr=( $1 )
+	local declare -a hand
+	local total=0
 	read -r response;
 	case $response in
 		"draw"|"yes"|"y"|"d")
@@ -24,9 +26,15 @@ function deck_input() {
 
 			#remainder=${card_arr[@]}
 		        #echo "Remainder: $remainder"
-	    
+	    		local hand+=("$top_card")
 			echo $top_card
 		        ;;
+		"hold"|"stop"|"h")
+			echo "Holding"
+			echo "Hand: ${hand[@]}"
+			total=$(hand_total "${hand[@]}")
+			echo "Total value of hand $total"
+			;;
 		"quit"|"exit"|"q")
 			echo "Leaving the program"
 			break

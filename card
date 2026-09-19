@@ -21,8 +21,22 @@ function card_value() {
     esac
 }
 
+function hand_total() {
+	local hand=( "$@" )
+	local total=0
+	for card in "${hand[@]}"; do
+		local curr_value=$(card_value $card) 
+		local total=$(($total + $curr_value))
+	done
+	echo "$total"
+}
+
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     echo "Running test code"
+    declare -a arr=("AD" "7S" "10D" "KH")
+    echo "Full hand: ${arr[@]}"
+    total=$(hand_total "${arr[@]}")
+    echo "actual total: $total"
     card_value AD
     card_value 7S
     card_value 10D

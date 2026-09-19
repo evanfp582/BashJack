@@ -8,11 +8,16 @@ NUM_OF_DECKS=1
 
 function main() {
 	deck=( $(draw_deck $NUM_OF_DECKS) )
+	local dealer_hand=()
+	local hand=()
+	# Initial deal
+	
+	
 	while true; do
 		printf 'Action: '
 		#read -r res
 		#card=$(echo $res | deck_input "${deck[@]}")
-		
+		local total=0	
 		read -r response;
         	case $response in
                 	"draw"|"yes"|"y"|"d")
@@ -20,12 +25,27 @@ function main() {
 				local card_slice="${deck[@]:1}"
 				deck=( $card_slice )
                         	
-				remainder=${deck[@]}
-				echo "Remainder: $remainder"
+				#remainder=${deck[@]}
+				#echo "Remainder: $remainder"
 				
+				# Shuffle deck if deck length == 0 
+				if [[ -z "${deck[@]}" ]]; then
+					echo "deck is empty"
+					deck=( $(shuffle $deck) )
+				fi
+
+				local hand+=($top_card)
+				# echo "Hand: ${hand[@]}"
+
 				echo "You drew $top_card"
 				card_val=$(card_value $top_card)
 				echo "That card has a blackjack value of $card_val"
+				;;
+			"hold"|"stop"|"h"|"stand"|"s")
+	                        # echo "Holding"
+        	                echo "Hand: ${hand[@]}"
+                	        local total=$(hand_total "${hand[@]}")
+                        	echo "Total value of blackjack hand $total"
 				;;
 			"quit"|"exit"|"q")
 				echo "Leaving the program"
