@@ -11,38 +11,12 @@ function draw_deck() {
 	echo ${cards_arr[@]}
 }
 
-function deck_input() {
-	local card_arr=( $1 )
-	local declare -a hand
-	local total=0
-	read -r response;
-	case $response in
-		"draw"|"yes"|"y"|"d")
-        		local top_card="${card_arr[0]}"
-		        local card_slice="${card_arr[@]:1}"
-		        local card_arr=($card_slice)
-			
-			#echo "Top card: $top_card"
+function draw() {
+	local -n deck_ref=$1
+	local -n card_output=$2
 
-			#remainder=${card_arr[@]}
-		        #echo "Remainder: $remainder"
-	    		local hand+=("$top_card")
-			echo $top_card
-		        ;;
-		"hold"|"stop"|"h")
-			echo "Holding"
-			echo "Hand: ${hand[@]}"
-			total=$(hand_total "${hand[@]}")
-			echo "Total value of hand $total"
-			;;
-		"quit"|"exit"|"q")
-			echo "Leaving the program"
-			break
-			;;
-   		*)
-        		echo "What do you mean"
-		        ;;
-	esac
+	card_output="${deck_ref[0]}"	
+	deck_ref=( "${deck_ref[@]:1}" )
 }
 
 

@@ -9,6 +9,9 @@ NUM_OF_DECKS=1
 function end_logic() {
 	local player_total=$1
 	local dealer_total=$2
+	
+	echo "player_total: $player_total"
+	echo "dealer_total: $dealer_total"
 
 	if [[ $player_total -gt 21 ]]; then
 		echo "Player busted, dealer wins"
@@ -18,105 +21,113 @@ function end_logic() {
 		echo "Draw, it is a push"
 	elif [[ $player_total -gt $dealer_total ]]; then
 		echo "Player wins!"
-	else
+	elif [[ $player_total -lt $dealer_total ]]; then
 		echo "Dealer wins :("
+	else
+		echo "Something went wrong"
+		return 1
 	fi	
 	return 0
 
 }
 
+function initial_deal() {
+	local -n deck_ref=$1
+
+	local -n dealer_hand_ref=$2
+	local -n player_hand_ref=$3
+	
+	draw deck dealer_card_1_ref
+	draw deck player_card_1_ref
+	draw deck dealer_card_2_ref
+	draw deck player_card_2_ref
+
+	dealer_hand=( $dealer_card_1_ref $dealer_card_2_ref )
+	player_hand=( $player_card_1_ref $player_card_2_ref )
+}
+
+function dealer_draw() {
+	local -n deck_ref=$1
+	local -n dealer_hand_ref=$2
+	local dealer_hand_arr=("${dealer_hand_ref[@]}")
+
+	echo "Dealer reveals their card, they have a ${dealer_hand_arr[0]}"
+	local dealer_total=$(hand_total "${dealer_hand_arr[@]}")
+	while [ $dealer_total -le 16 ]; do
+
+		
+		local new_card="${deck_ref[0]}"
+		deck_ref=( "${deck_ref[@]:1}" )
+
+		echo "Dealer drew: $new_card"
+		dealer_hand_arr+=($new_card)
+		local dealer_total=$(hand_total "${dealer_hand_arr[@]}")
+		echo "Dealer total: $dealer_total"
+	done
+	dealer_hand_ref=("${dealer_hand_arr[@]}")
+}
+
+
 function main() {
 	deck=( $(draw_deck $NUM_OF_DECKS) )
 	local busted="false"
-	# Initial deal. Player, dealer (face down), player, dealer (face up)
-	local first_card="${deck[0]}" 
-	local second_card="${deck[1]}"
-	local third_card="${deck[2]}"
-	local fourth_card="${deck[3]}"
+	#echo "deck: ${deck[@]}"
 	
-	#echo "Deck: ${deck[@]}"
-	local deck=( "${deck[@]:4}" )
-	#echo "Deck: ${deck[@]}"
+	initial_deal deck dealer_hand player_hand
 
-	local dealer_hand=($second_card $fourth_card)
-	local hand=($first_card $third_card)	
-	echo "Dealer has $fourth_card showing"
-	echo "You have ${hand[@]}"
-
+	local player_hand=(${player_hand[@]})
+	local dealer_hand=(${dealer_hand[@]})
+	echo "Dealer has ${dealer_hand[1]} showing"
+	echo "You have ${player_hand[@]}"
+	
+#	echo "deck: ${deck[@]}"
 	while true; do
 		if [[ $busted == "false" ]]; then
 			printf 'Action: '
-			#read -r res
-			#card=$(echo $res | deck_input "${deck[@]}")
-			local total=0	
+			local total=0
 			read -r response;
 		else
 			response="stand"
 		fi
-        	case $response in
-                	"draw"|"yes"|"y"|"d")
-                        	local top_card="${deck[0]}"
-				local card_slice="${deck[@]:1}"
-				deck=( $card_slice )
-                        	
-				#remainder=${deck[@]}
-				#echo "Remainder: $remainder"
-				
-				# Shuffle deck if deck length == 0 
+		case $response in
+			"hit"|"h"|"draw"|"d"|"y"|"yes")
+				draw deck card
+				local player_hand+=($card)
+				echo "Player hand = ${player_hand[@]}"
 				if [[ -z "${deck[@]}" ]]; then
 					echo "deck is empty"
-					deck=( $(shuffle $deck) )
+					deck=( $(draw_deck $NUM_OF_DECKS) )
 				fi
 
-				local hand+=($top_card)
-				# echo "Hand: ${hand[@]}"
-
-				echo "You drew $top_card"
-				card_val=$(card_value $top_card)
-
-                	        local total=$(hand_total "${hand[@]}")
-				# echo "That card has a blackjack value of $card_val"
-				
-				#If the player has total > 21, force them to stand
-				if [[ $total -gt 21 ]]; then	
+				local total=$(hand_total "${player_hand[@]}")
+				if [[ $total -gt 21 ]]; then
 					echo "You have busted with a value of $total"
 					local busted="true"
 				fi
-				 
 				;;
-			"hold"|"stop"|"h"|"stand"|"s")
-	                        # echo "Holding"
-        	                echo "Hand: ${hand[@]}"
-                	        local total=$(hand_total "${hand[@]}")
-                        	echo "Total value of blackjack hand $total"
 
-				echo "Dealer reveals their card, they have a $second_card"
+			"stand"|"stop"|"s")
+				local total=$(hand_total "${player_hand[@]}")
+				echo "You are standing with a value of $total"
+				
+				dealer_draw deck dealer_hand
 				local dealer_total=$(hand_total "${dealer_hand[@]}")
-				while [ $dealer_total -le 16 ]; do
-					local top_card="${deck[0]}"
-					echo "Dealer drew $top_card"
-	                                local deck=( "${deck[@]:1}" )
-					local dealer_hand+=($top_card)
-					echo "Dealer hand ${dealer_hand[@]}"
-					local dealer_total=$(hand_total "${dealer_hand[@]}")
-					echo "Dealer total: $dealer_total"
-				done
-
-				end_logic $total $dealer_total
+				end_logic $total $dealer_total  
 				
 				return 0
+				
 				;;
-			"quit"|"exit"|"q")
-				echo "Leaving the program"
-				break
+			"q"|"quit"|"exit")
+				echo "leaving the program"
+				return 0
 				;;
 			*)
-				echo "What do you mean"
-				;;
+				printf "Valid command not found\n'hit' or 'h' to add a card\n'stand' or 's' to stand\n'quit' or 'q' to quit the program\n"
 		esac
 	done
-}
+	return 0
 
+}
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
         echo "Running BlackJack"
