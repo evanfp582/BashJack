@@ -7,27 +7,37 @@
 NUM_OF_DECKS=1
 
 function end_logic() {
+	# I am taking the return code to mean if the code failed to run
+	# But rather the result of the end 
+	# 2 	= player wins
+	# 3 	= dealer wins
+	# 4 	= push
+	# I could do it a different way, but this will help me learn some bash things
 	local player_total=$1
 	local dealer_total=$2
 	
-	echo "player_total: $player_total"
-	echo "dealer_total: $dealer_total"
+	#echo "player_total: $player_total"
+	#echo "dealer_total: $dealer_total"
 
 	if [[ $player_total -gt 21 ]]; then
 		echo "Player busted, dealer wins"
+		return 3
 	elif [[ $dealer_total -gt 21 ]]; then
 		echo "Dealer busted, player wins"
+		return 2
 	elif [[ $player_total == $dealer_total ]]; then
 		echo "Draw, it is a push"
+		return 4
 	elif [[ $player_total -gt $dealer_total ]]; then
 		echo "Player wins!"
+		return 2
 	elif [[ $player_total -lt $dealer_total ]]; then
 		echo "Dealer wins :("
+		return 3
 	else
 		echo "Something went wrong"
 		return 1
 	fi	
-	return 0
 
 }
 
@@ -62,13 +72,15 @@ function dealer_draw() {
 		echo "Dealer drew: $new_card"
 		dealer_hand_arr+=($new_card)
 		local dealer_total=$(hand_total "${dealer_hand_arr[@]}")
-		echo "Dealer total: $dealer_total"
 	done
+	echo "Dealer total: $dealer_total"
 	dealer_hand_ref=("${dealer_hand_arr[@]}")
 }
 
 
-function main() {
+
+
+function game() {
 	deck=( $(draw_deck $NUM_OF_DECKS) )
 	local busted="false"
 	#echo "deck: ${deck[@]}"
@@ -112,9 +124,10 @@ function main() {
 				
 				dealer_draw deck dealer_hand
 				local dealer_total=$(hand_total "${dealer_hand[@]}")
-				end_logic $total $dealer_total  
-				
-				return 0
+				end_logic $total $dealer_total
+				local game_result=$?
+				# 2=player win; 3=dealer win; 4=push 
+				return $game_result
 				
 				;;
 			"q"|"quit"|"exit")
@@ -127,6 +140,58 @@ function main() {
 	done
 	return 0
 
+}
+
+function get_bet() {
+	local -n amount_ref=$2
+	local -n bank_ref=$1
+	while true; do
+		printf "Input valid bet: "
+		read -r amount_ref;
+		if [[ $amount_ref -gt $bank_ref ]]; then
+			echo "Bet too large"
+		elif [[ $amount_ref -lt 0 ]];then
+			echo "Bet can't be negative"
+		else
+			bank_ref=$(( $bank_ref-$amount_ref ))
+			return 0
+		fi	
+	done
+}
+
+function payout() {
+	local -n bank_ref=$1
+	local -n bet=$2
+	local -n game_result_ref=$3
+
+	case $game_result_ref in
+		2)
+			#echo "Player won"
+			bank_ref=$(($bank_ref + ($bet * 2)))
+			;;
+		3)
+			#echo "Dealer won"
+			;;
+		4)
+			#echo "Push"
+			bank_ref=$(($bank_ref + $bet))
+			;;
+		*)
+			echo "There was an error somewhere"
+			return 1
+			;;
+	esac
+	return 0
+}
+
+function main() {
+	bank=100
+	echo "Starting cash $bank"
+	get_bet bank amount
+	game
+	local game_result=$?
+	payout bank amount game_result
+	echo "Bank: $bank"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
