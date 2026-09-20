@@ -14,5 +14,24 @@ You **can** return things liek how you expect by using the life saving local -n 
 Scope can and will get in your way, which is why I do not mess with the sub-terminals    
 Arrays are finicky, fail in unexpected ways, and like to become strings rather than arrays 
 
+
+# TODO
+## Essential rules
+- Aces being either 1 or 11
+- Split (I think this is going to be real difficult)
+- Double
+- Correct BlackJack payout (3-2 rather than 1-1)
+
+## User Interface
+I have not fully decided what I want to do.  
+I think a minimal TUI could be fun and easy enough, but even if I do not want to do that, the current commandline UI needs to be updated 
+
+## Multiple Players
+Allow for multiple people to be sit at the table with the user.  
+I think it would be really cool to give them **play styles**
+- The Card Counter
+- Greedy
+- Conservative  
+
 # Resources
 https://github.com/dylanaraps/writing-a-tui-in-bash 

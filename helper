@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# Thank you You Suck At Programming for this function
+
+# How to use it 
+# DEBUG=1 ./BashJack
+
+debug() {
+	if [[ -n $DEBUG ]]; then
+		echo '[DEBUG]' "$@" >&2
+	fi
+	return 0
+}

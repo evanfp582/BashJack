@@ -2,6 +2,7 @@
 
 . ./deck
 . ./card
+. ./helper
 
 # Constants
 NUM_OF_DECKS=1
@@ -83,7 +84,7 @@ function dealer_draw() {
 function game() {
 	deck=( $(draw_deck $NUM_OF_DECKS) )
 	local busted="false"
-	#echo "deck: ${deck[@]}"
+	debug "deck before drawing: ${deck[@]}"
 	
 	initial_deal deck dealer_hand player_hand
 
@@ -92,7 +93,6 @@ function game() {
 	echo "Dealer has ${dealer_hand[1]} showing"
 	echo "You have ${player_hand[@]}"
 	
-#	echo "deck: ${deck[@]}"
 	while true; do
 		if [[ $busted == "false" ]]; then
 			printf 'Action: '
@@ -185,13 +185,18 @@ function payout() {
 }
 
 function main() {
+	if [[ -n $DEBUG ]]; then
+		echo "--RUNNING IN DEBUG MODE--"
+	fi
 	bank=100
-	echo "Starting cash $bank"
-	get_bet bank amount
-	game
-	local game_result=$?
-	payout bank amount game_result
-	echo "Bank: $bank"
+	while true; do
+		echo "Starting cash $bank"
+		get_bet bank amount
+		game
+		local game_result=$?
+		payout bank amount game_result
+		echo "Bank: $bank"
+	done
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
