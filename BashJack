@@ -48,10 +48,10 @@ function initial_deal() {
 	local -n dealer_hand_ref=$2
 	local -n player_hand_ref=$3
 	
-	draw deck dealer_card_1_ref
 	draw deck player_card_1_ref
-	draw deck dealer_card_2_ref
+	draw deck dealer_card_1_ref
 	draw deck player_card_2_ref
+	draw deck dealer_card_2_ref
 
 	dealer_hand=( $dealer_card_1_ref $dealer_card_2_ref )
 	player_hand=( $player_card_1_ref $player_card_2_ref )
@@ -83,7 +83,7 @@ function dealer_draw() {
 
 function game() {
 	deck=( $(draw_deck $NUM_OF_DECKS) )
-	local busted="false"
+	local stop_draw="false"
 	debug "deck before drawing: ${deck[@]}"
 	
 	initial_deal deck dealer_hand player_hand
@@ -94,7 +94,7 @@ function game() {
 	echo "You have ${player_hand[@]}"
 	
 	while true; do
-		if [[ $busted == "false" ]]; then
+		if [[ $stop_draw == "false" ]]; then
 			printf 'Action: '
 			local total=0
 			read -r response;
@@ -114,10 +114,37 @@ function game() {
 				local total=$(hand_total "${player_hand[@]}")
 				if [[ $total -gt 21 ]]; then
 					echo "You have busted with a value of $total"
-					local busted="true"
+					local stop_draw="true"
 				fi
 				;;
+			"double"|"dub"|"w")
+				echo "Attempting to double your bet and only get 1 more card"
+				# Must only have 2 cards in your hand
+				if [[ "${#player_hand[@]}" == 2 ]]; then
+					local new_bank=$(( $bank - $bet_amount )) 
+					debug "Attempting to set new bet amount in double"
+					if [[ $new_bank -ge 0 ]]; then
+						bank=$new_bank
+						bet_amount=$(( $bet_amount * 2 ))
+						debug "Set bank to $bank and bet_amount to $bet_amount"
 
+						draw deck card
+						local player_hand+=($card)
+						echo "Player hand = ${player_hand[@]}"
+						if [[ -z "${deck[@]}" ]]; then
+							echo "deck is empty"
+							deck=( $(draw_deck $NUM_OF_DECKS) )
+						fi
+
+						local stop_draw="true"
+
+					else
+						echo "You do not have enough money to double"
+					fi
+				else
+					echo "You can only double when you have 2 cards"
+				fi	
+				;;
 			"stand"|"stop"|"s")
 				local total=$(hand_total "${player_hand[@]}")
 				echo "You are standing with a value of $total"
@@ -135,7 +162,7 @@ function game() {
 				return 0
 				;;
 			*)
-				printf "Valid command not found\n'hit' or 'h' to add a card\n'stand' or 's' to stand\n'quit' or 'q' to quit the program\n"
+				printf "Valid command not found\n'hit' or 'h' to add a card\n'double' or 'dub' to double your bet and get only 1 more card\n'stand' or 's' to stand\n'quit' or 'q' to quit the program\n"
 		esac
 	done
 	return 0
@@ -191,10 +218,10 @@ function main() {
 	bank=100
 	while true; do
 		echo "Starting cash $bank"
-		get_bet bank amount
+		get_bet bank bet_amount
 		game
 		local game_result=$?
-		payout bank amount game_result
+		payout bank bet_amount game_result
 		echo "Bank: $bank"
 	done
 }
