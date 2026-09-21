@@ -17,7 +17,7 @@ Arrays are finicky, fail in unexpected ways, and like to become strings rather t
 
 # TODO
 ## Essential rules
-- Aces being either 1 or 11
+- Aces being either 1 or 11 DONE  
 - Split (I think this is going to be real difficult)
 - Double
 - Correct BlackJack payout (3-2 rather than 1-1)

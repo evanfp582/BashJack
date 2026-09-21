@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 
+. ./helper
 
 function card_value() {
     local card=$1
     local card_value=${card:0:-1}
+
+
     case $card_value in
 	    [[:digit:]]*)
 	    echo "$card_value"
@@ -23,17 +26,38 @@ function card_value() {
 
 function hand_total() {
 	local hand=( "$@" )
+	debug "Hand to total: ${hand[@]}"
 	local total=0
 	for card in "${hand[@]}"; do
 		local curr_value=$(card_value $card) 
 		local total=$(($total + $curr_value))
 	done
+	debug "Total before any manipulation: $total"
+	# If hand contains ACE, subtract 10 if total > 21 
+
+        local ace_present=$(printf -- '%s\n' "${hand[@]}" | grep "A")
+        
+	for ace in $ace_present; do
+	    if [[ $total -gt 21 ]]; then
+		debug "Total is too big if Ace is 11. Subtracting 10"
+		total=$(( $total-10 ))
+	    fi
+	done
+	
 	echo "$total"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     echo "Running test code"
-    declare -a arr=("AD" "7S" "10D" "KH")
+    declare -a arr=("AS" "AH" "9S")
+    A_present=$(printf -- '%s\n' "${arr[@]}" | grep "A")
+    
+    if [[ -n $A_present ]]; then
+	    echo "Ace present: $A_present"
+    else 
+	echo "No ace"
+    fi
+
     echo "Full hand: ${arr[@]}"
     total=$(hand_total "${arr[@]}")
     echo "actual total: $total"
