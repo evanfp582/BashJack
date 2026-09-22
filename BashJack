@@ -13,12 +13,47 @@ function end_logic() {
 	# 2 	= player wins
 	# 3 	= dealer wins
 	# 4 	= push
+	# 21	= blackjack win (we have fun here)
 	# I could do it a different way, but this will help me learn some bash things
-	local player_total=$1
-	local dealer_total=$2
+	local -n player_hand_ref=$1	
+	local -n dealer_hand_ref=$2
+	debug "What is up with these: "
+	debug "Player hand ${player_hand_ref[@]}"
+	debug "Dealer hand ${dealer_hand_ref[@]}"	
+	local player_total=$(hand_total "${player_hand_ref[@]}")
+	local dealer_total=$(hand_total "${dealer_hand_ref[@]}")
+
+	# Special logic if there is a blackjack involved
+	local player_bj=$(is_blackjack "${player_hand_ref[@]}")
+	local dealer_bj=$(is_blackjack "${dealer_hand_ref[@]}")
+
+	# Making it 1 string so I can use a CASE statement rather than a nest of if else
+	local concat="${player_bj}${dealer_bj}"
+	debug "Concatinated player_blackjack dealer_blackjack results: $concat"
+	case $concat in 
+		"truetrue")
+			# Both blackjack, push
+			return 4
+			;;
+		"truefalse")
+			# You got blackjack, dealer does not
+			return 21
+			;;
+		"falsetrue")
+			# Dealer has blackjack, you do not
+			return 3
+			;;
+		"falsefalse")
+			# Nothing special here
+			;;
+	esac
+
+
 	
 	#echo "player_total: $player_total"
 	#echo "dealer_total: $dealer_total"
+	
+	debug "Totals: \n\tPlayer: $player_total \n\tDealer: $dealer_total"
 
 	if [[ $player_total -gt 21 ]]; then
 		echo "Player busted, dealer wins"
@@ -151,9 +186,9 @@ function game() {
 				
 				dealer_draw deck dealer_hand
 				local dealer_total=$(hand_total "${dealer_hand[@]}")
-				end_logic $total $dealer_total
+				end_logic player_hand dealer_hand
 				local game_result=$?
-				# 2=player win; 3=dealer win; 4=push 
+				# 2=player win; 3=dealer win; 4=push; 21=blackjack win 
 				return $game_result
 				
 				;;
@@ -202,6 +237,11 @@ function payout() {
 		4)
 			#echo "Push"
 			bank_ref=$(($bank_ref + $bet))
+			;;
+		21)
+			#Winning blackjack hand
+			local new_winnings=$((($bet * 2) + $bet / 2))
+			bank_ref=$(($bank_ref + $new_winnings))
 			;;
 		*)
 			echo "There was an error somewhere"

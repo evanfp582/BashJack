@@ -24,6 +24,38 @@ function card_value() {
     esac
 }
 
+function is_blackjack() {
+	local hand=( "$@" )
+	# Hmmm I wonder what the fastest way of checking this is
+
+	debug "${hand[@]}"
+	local arr_len="${#hand[@]}"
+	if [[ arr_len -ne 2 ]]; then
+		debug "Must be exactly 2 cards to be considered a blackjack, not $arr_len"
+		echo "false"
+		return 0
+	fi
+	
+	local ace_present=$(printf -- '%s\n' "${hand[@]}" | grep "A")
+	if [[ -z $ace_present ]]; then
+		debug "Must contain and ace to be considered blackjack"
+		echo "false"
+		return 0
+	fi
+
+	local ten_present=$(printf -- '%s\n' "${hand[@]}" | grep -e "10" -e "J" -e "Q" -e "K")
+	debug "ten_present: $ten_present"	
+	if [[ -z $ten_present ]]; then
+		debug "Must contain and 10 value to be considered blackjack"
+		echo "false"
+		return 0
+	fi
+	debug "Blackjack!"
+	echo "true"
+	return 0
+
+}
+
 function hand_total() {
 	local hand=( "$@" )
 	debug "Hand to total: ${hand[@]}"
@@ -49,21 +81,20 @@ function hand_total() {
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     echo "Running test code"
-    declare -a arr=("AS" "AH" "9S")
-    A_present=$(printf -- '%s\n' "${arr[@]}" | grep "A")
-    
-    if [[ -n $A_present ]]; then
-	    echo "Ace present: $A_present"
-    else 
-	echo "No ace"
-    fi
+    declare -a arr=("AH" "9S")
+    res=$(is_blackjack "${arr[@]}")
+    echo "Result: $res"
+    declare -a arr=("AH" "9S" "AS")
+    res=$(is_blackjack "${arr[@]}")
+    echo "Result: $res"
+    declare -a arr=("KH" "AS")
+    res=$(is_blackjack "${arr[@]}")
+    echo "Result: $res"
+    declare -a arr=("2S" "9S" "5H" "3D" "2D")
+    res=$(is_blackjack "${arr[@]}")
+    echo "Result: $res"
+    declare -a arr=("AH" "KS")
+    res=$(is_blackjack "${arr[@]}")
+    echo "Result: $res"
 
-    echo "Full hand: ${arr[@]}"
-    total=$(hand_total "${arr[@]}")
-    echo "actual total: $total"
-    card_value AD
-    card_value 7S
-    card_value 10D
-    card_value KH
-    card_value 2H
 fi
