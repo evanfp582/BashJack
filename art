@@ -1,0 +1,38 @@
+#! /usr/bin/env bash
+
+function print_art() {
+	local art=$1
+	local start_x=$2
+	local start_y=$3
+	
+	while IFS= read -r line; do
+		tput cup $start_y $start_x
+		echo -n "$line"
+		((start_y++))
+	done <<< "$art"
+}
+
+function art_width() {
+	local art=$1
+	local max=0
+	local current_line_len=
+	while read line; do
+
+		current_line_len=${#line}
+		if [[ $current_line_len -gt $max ]]; then
+			max=$current_line_len
+		fi
+	done <<< $art
+	echo "$max"
+}
+
+IFS= read -d '' -r BLACKJACK_ART <<"EOF"
+______ _            _    _            _    
+| ___ \ |          | |  (_)          | |   
+| |_/ / | __ _  ___| | ___  __ _  ___| | __
+| ___ \ |/ _` |/ __| |/ / |/ _` |/ __| |/ /
+| |_/ / | (_| | (__|   <| | (_| | (__|   < 
+\____/|_|\__,_|\___|_|\_\ |\__,_|\___|_|\_|
+                       _/ |                
+                      |__/                 
+EOF

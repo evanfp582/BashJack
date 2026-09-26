@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+
+. ./art
+
+# Stolen from YSAP's Nightful TUI
+# https://github.com/bahamas10/nightfall-tui/blob/main/nightfall
+# It is just a bash implementation of some tput commands to speed it up
+# I added comments to each option to help me understand
+tput() {
+	local ESC=$'\x1b'
+	case "$1" in
+		sgr0) echo -n "$ESC[0m";; # Turn off all attributes
+		bold) echo -n "$ESC[1m";; # Start bold text
+		setaf) echo -n "$ESC[38;5;$2m";; # Set foreground color
+		setab) echo -n "$ESC[48;5;$2m";; # Set foreground color
+		sc) echo -n "$ESC[7";; # Save cursor position
+		rc) echo -n "$ESC[8";; # Restore cursor position
+		cnorm) echo -n "$ESC[?25h";; # Sets cursor to normal state
+		civis) echo -n "$ESC[?25l";; # Set cursor to invisible
+		smcup) echo -n "$ESC[?1049h";; #Saves screen contents
+		rmcup) echo -n "$ESC[?1049l";; # Restores screen contents
+		clear) echo -n "$ESC[2J";; # Clear the entires screen and home the cursor
+		cup) # Moves curser to position
+			local row=$(($2 + 1))
+			local col=$(($3 + 1))
+			echo -n "$ESC[$row;${col}H";;
+		'') return 1;;
+		*)
+			# not implemented - default to external command
+			command tput "$@"
+			;;
+	esac
+}
+
+
+function cleanup() {
+	tput cnorm
+	tput rmcup
+
+	tput sgr0 # Reset color
+	#stty echo 2>/dev/null
+	return 0
+}
+
+function center_text_col() {
+	local text=$1
+	local text_len=${#text}
+	echo "$((center_col-(text_len/2)))"
+	return 0
+}
+
+function draw_ui() {
+	draw_top 2
+	local bottom_line=$(( $rows - 20 ))
+	draw_bottom bottom_line
+	draw_table 2 $bottom_line
+	
+	local art_width=$(art_width "$BLACKJACK_ART")
+	local starting_x="$((center_col-(art_width/2)))"
+	print_art "$BLACKJACK_ART" $starting_x  20
+		
+	return 0
+}
+
+function draw_horizontal_line() {
+	local row=$1
+	local char=$2
+	local line=''
+	for ((i=0; i < COLUMNS; i++)); do
+		line+="$char"
+	done
+
+	tput cup $row 0
+	echo -n "$line"
+}
+
+function draw_top() {
+	local line=$1	
+	local text="Dealer"
+	
+	tput cup 1 $(center_text_col $text)
+	echo -n "$text"
+
+	draw_horizontal_line 2 '─'
+
+	return 0	
+}
+
+function draw_table() {
+	local top_line=$(( $1 + 1 ))
+	local bottom_line=$(( $2 - 1 ))
+
+	for i in $(seq $top_line $bottom_line); do 
+	#	echo "i: $i. top: $top_line. bot: $bottom_line"
+
+		tput setab 2; draw_horizontal_line $i ' '
+	done
+	tput sgr0
+}
+
+function draw_bottom() {
+	local line=$1
+	local text="Player: $USER"
+	tput cup $(($rows - 1)) $(center_text_col $text) 
+	echo -n "$text"
+
+	draw_horizontal_line $line '─'
+	return 0
+}
+
+
+function main() {
+	echo "Running the UI"
+
+	shopt -s checkwinsize
+	(:)
+	cols=$COLUMNS
+	rows=$LINES
+	center_row=$((rows/2))
+	center_col=$((cols/2))
+	
+
+	echo "Terminal size ${rows}x${cols}"
+
+	trap cleanup exit
+
+	tput smcup
+	tput civis
+	#stty -echo
+
+	#text="This is the center"
+	#text_len=${#text}
+	#tput cup $center_row $((center_col-(text_len/2)))
+	#echo -n "This is the center"
+	
+	draw_ui
+
+	while read -ra data; do
+		echo "data: $data"
+	done;
+}
+main
+
+
+# Various tput commands
+# tput sc #Saves the curor location
+# rpur cup "COL" "LINE" #Moves the curser to COL x Line position
+# tput setaf NUM #Sets foreground color
+#
+#
+# to get pid of previously run background task
+# local pid=$!
+# wait "$pid" #Waits until the pid task is closed/exited
