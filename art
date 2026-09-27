@@ -1,5 +1,6 @@
 #! /usr/bin/env bash
 
+
 function print_art() {
 	local art=$1
 	local start_x=$2
@@ -26,6 +27,64 @@ function art_width() {
 	echo "$max"
 }
 
+function art_height() {
+	local art=$1
+	local count=0
+
+	while read line; do
+		((count++))
+	done
+	echo "$count"
+}
+
+function print_chip_stack() {
+	local count=$1
+	local x=$2
+	local y=$3
+
+	local ESC=$'\x1b'
+
+	for i in $(seq 1 $count); do	
+		local random_color_code=$(shuf -i 1-6 -n 1)
+		tput cup $y $x
+		echo -n "$ESC[38;5;${random_color_code}m"
+		echo -n "$CHIP"
+		((y--))
+	done
+	tput sgr0
+}
+
+function print_card() {
+	local card=$1
+	local x=$2
+	local y=$3
+	tput cup $y $x
+	echo -n "└───┘"
+	tput cup $(($y-1)) $x
+	local card_digit=$(printf '%-2s' "${card:0:-1}")
+	local card_suit="${card:0-1}"
+
+	case $card_suit in 
+		"S")
+			echo -n "│${card_digit}♠│"
+			;;
+		"C")
+			echo -n "│${card_digit}♣│"
+			;;
+		"D")
+			echo -n "│${card_digit}♦│"
+			;;
+		"H")
+			echo -n "│${card_digit}♥│"
+			;;
+	esac
+	tput cup $((y-2)) $x
+	echo -n "┌───┐"
+
+
+
+}
+
 IFS= read -d '' -r BLACKJACK_ART <<"EOF"
 ______ _            _    _            _    
 | ___ \ |          | |  (_)          | |   
@@ -36,3 +95,21 @@ ______ _            _    _            _
                        _/ |                
                       |__/                 
 EOF
+
+IFS= read -d '' -r CHIP <<"EOF"
+██████
+EOF
+
+IFS= read -d '' -r INPUT_BOX<<"EOF"
+┌──────────────────────┐
+│                      │
+└──────────────────────┘
+EOF
+
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+	echo " Testing art"
+
+	print_card "AS" 20 20
+	print_card "10D" 25 25
+fi
