@@ -26,6 +26,11 @@ Arrays are finicky, fail in unexpected ways, and like to become strings rather t
 I have not fully decided what I want to do.  
 I think a minimal TUI could be fun and easy enough, but even if I do not want to do that, the current commandline UI needs to be updated 
 
+Working on the UI now!
+<img width="938" height="970" alt="image" src="https://github.com/user-attachments/assets/60922786-94dd-4d9d-81a6-4cccbd106607" />
+it is in a good state, but the data is all dummied out, adding the UI and gameplay together may be a bit painful
+
+
 ## Multiple Players
 Allow for multiple people to be sit at the table with the user.  
 I think it would be really cool to give them **play styles**
