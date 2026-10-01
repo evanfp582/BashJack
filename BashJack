@@ -255,6 +255,10 @@ function main() {
 	if [[ -n $DEBUG ]]; then
 		echo "--RUNNING IN DEBUG MODE--"
 	fi
+	if [[ -n $UI ]]; then
+		echo "Running User Interface"
+	fi
+
 	bank=100
 	while true; do
 		echo "Starting cash $bank"

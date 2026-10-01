@@ -88,10 +88,10 @@ function draw_top() {
 }
 
 function draw_table() {
-	local top_line=$(( $1 + 1 ))
-	local bottom_line=$(( $2 - 1 ))
+	local table_top=$(( $1 + 1 ))
+	local table_bottom=$(( $2 - 1 ))
 
-	for i in $(seq $top_line $bottom_line); do 
+	for i in $(seq $table_top $table_bottom); do 
 	#	echo "i: $i. top: $top_line. bot: $bottom_line"
 
 		tput setab 2; draw_horizontal_line $i ' '
@@ -140,10 +140,10 @@ function clear_input() {
 }
 
 function clear_table() {
-	local top_line=$(( $1 + 1 ))
-	local bottom_line=$(( $2 - 1 ))
+	local table_top=$(( $1 + 1 ))
+	local table_bottom=$(( $2 - 1 ))
 
-	for i in $(seq $top_line $bottom_line); do 
+	for i in $(seq $table_top $table_bottom); do 
 	#	echo "i: $i. top: $top_line. bot: $bottom_line"
 
 		tput setab 2; draw_horizontal_line $i ' '
@@ -189,11 +189,11 @@ function main() {
 	print_card "10D" 59 10
 	
 	draw_input
+	local bottom_line=$(( $rows - 20 ))
 
 	while read -ra data; do
 		#echo "data: $data"
 		if [[ $data = "clear" ]]; then
-			local bottom_line=$(( $rows - 20 ))
 			draw_table 2 $bottom_line
 	
 		fi

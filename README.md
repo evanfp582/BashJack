@@ -1,6 +1,12 @@
 # BashJack
 Blackjack written using bash scripts
 
+Executed with ./BashJack
+DEBUG=1 ./BashJack
+    For debug mode
+UI=1 ./BashJack
+    For UI
+
 
 # Learning Journey
 First of all, I know that bash is not really meant to be used in this way.  
