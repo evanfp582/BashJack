@@ -3,6 +3,7 @@
 . ./deck
 . ./card
 . ./helper
+. ./UI
 
 # Constants
 NUM_OF_DECKS=1
@@ -128,6 +129,11 @@ function game() {
 	echo "Dealer has ${dealer_hand[1]} showing"
 	echo "You have ${player_hand[@]}"
 	
+	(print_hand "player" "${player_hand[@]}")
+	(print_hand "dealer" "${dealer_hand[@]}")
+		
+	# return 0
+
 	while true; do
 		if [[ $stop_draw == "false" ]]; then
 			printf 'Action: '
@@ -258,6 +264,7 @@ function main() {
 	if [[ -n $UI ]]; then
 		echo "Running User Interface"
 	fi
+
 
 	bank=100
 	while true; do
