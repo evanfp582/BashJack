@@ -263,6 +263,15 @@ function game() {
 					echo "Not allowed to split since this is a 2 deck blackjack format (I did not program it in yet)"
 				fi
 				;;
+
+			"insurance")
+				local message="We do not do that here. That is a losing strategy (I did not program it in)"
+				if [[ -n $UI ]]; then
+					draw_message "$message"
+				else
+					echo "$message"
+				fi
+				;;
 			*)
 				if [[ -n $UI ]]; then
 					draw_message "Not a valid command. 's' or 'stand' to stand. 'h', 'hit', or 'draw' to get another card. 'double' or 'dub' to double"
@@ -378,6 +387,7 @@ function main() {
 		get_bet bank bet_amount
 		if [[ -n $UI ]]; then
 			draw_chip_stack $bank
+			print_bet $bet_amount
 		fi
 		game
 		local game_result=$?

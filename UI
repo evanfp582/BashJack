@@ -145,10 +145,10 @@ function draw_table() {
 
 function draw_chip_stack() {
 	local chips=$1
-	local start_col=$(( $COLUMNS - 20 ))
+	local start_col=$(( $COLUMNS - 26 ))
 	local start_row=$(( $rows - 10 ))
 	
-	print_chip_stack $(($chips / 100)) $start_col $start_row
+	print_chip_stack $chips $start_col $start_row
 	tput cup $(($start_row+1)) $start_col
 	echo -n "Chips: $chips    "
 
@@ -186,7 +186,7 @@ function print_hand() {
 	local starting_col=$(( $center_col - ( 2 * $hand_size + ( $hand_size - 2))))
 
 	if [ "$1" == "player" ]; then
-		local row=40
+		local row=$(( $rows -24 ))
 	elif [ "$1" == "dealer" ]; then
 		local row=10
 	else	
@@ -292,7 +292,9 @@ function ui_main() {
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 	echo "Running UI"
-	ui_main
+	#ui_main
+	#draw_chip_stack 5628
+	print_bet 120
 fi
 
 

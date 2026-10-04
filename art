@@ -1,6 +1,17 @@
 #! /usr/bin/env bash
 
+ESC=$'\x1b'
 
+# I want 3 stacks of chips
+# Far left are Blue = 10. Max of 9
+blue=21
+# Middle is yellow = 100. Max of 9
+yellow=11
+# Far right is purple = 1000. Max of 9
+ purple=55
+# Which means the max bank value to show without breaking is 9999
+
+	
 function print_art() {
 	local art=$1
 	local start_x=$2
@@ -42,22 +53,75 @@ function print_chip_stack() {
 	local x=$2
 	local y=$3
 
-	local ESC=$'\x1b'
+	
+	#Clean up
+	tput sgr0
+	local clean_y=$y
+	for i in $(seq 1 9); do
+		tput cup $clean_y $x
+		echo -n "                  "
+		((clean_y--))
+	done
 
-	for i in $(seq 1 $count); do	
-		local random_color_code=$(shuf -i 1-6 -n 1)
-		tput cup $y $x
-		echo -n "$ESC[38;5;${random_color_code}m"
+
+	#Starting with far right, the 1000s
+	local thous_y=$y
+	while [[ "$count" -ge 1000 ]]; do
+		tput cup $thous_y $((x+12)) 
+		echo -n "$ESC[38;5;${purple}m"
 		echo -n "$CHIP"
-		((y--))
+		count=$(( $count - 1000 ))
+		((thous_y--))
 	done
 
-	for i in $(seq 1 5); do
-		tput cup $y $x
-		echo -n "      "
-		((y--))
+	#Now middle, the 100s
+	local hund_y=$y
+	while [[ "$count" -ge 100 ]]; do
+		tput cup $hund_y $((x+6)) 
+		echo -n "$ESC[38;5;${yellow}m"
+		echo -n "$CHIP"
+		count=$(( $count - 100 ))
+		((hund_y--))
 	done
 
+	#Now middle, the 10s
+	local ten_y=$y
+	while [[ "$count" -ge 10 ]]; do
+		tput cup $ten_y $((x)) 
+		echo -n "$ESC[38;5;${blue}m"
+		echo -n "$CHIP"
+		count=$(( $count - 10 ))
+		((ten_y--))
+	done
+
+	tput sgr0
+}
+
+function print_bet() {
+	local bet=$1
+	
+	# Set background to green, I am not sure if this works
+	echo -n "$ESC[48;5;2m"
+
+	if [[ "$bet" -ge 1000 ]]; then
+		# Bet is >= 1000 purple chip
+		echo -n "$ESC[38;5;${purple}m"
+	elif [[ "$bet" -ge 100 ]]; then
+		# Bet is < 1000 yellow chip
+		echo -n "$ESC[38;5;${yellow}m"
+	elif [[ "$bet" -ge 10 ]]; then
+		#Bet is < 100, blue chip
+		echo -n "$ESC[38;5;${blue}m"
+
+	fi
+	
+		
+	local starting_col=$(($LINES - 31))
+	local a_width=$(art_width "$TOP_CHIP")
+	local center_col=$(( ($COLUMNS/2) -1))
+	local starting_x="$((center_col-(art_width/2)))"
+	print_art "$TOP_CHIP" $starting_x $starting_col
+	
 	tput sgr0
 }
 
@@ -107,6 +171,13 @@ EOF
 
 IFS= read -d '' -r CHIP <<"EOF"
 ██████
+EOF
+
+IFS= read -d '' -r TOP_CHIP <<"EOF"
+ ▄▄▄ 
+█████
+█████
+ ▀▀▀ 
 EOF
 
 IFS= read -d '' -r INPUT_BOX<<"EOF"
