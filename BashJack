@@ -18,7 +18,6 @@ function end_logic() {
 	# I could do it a different way, but this will help me learn some bash things
 	local -n player_hand_ref=$1	
 	local -n dealer_hand_ref=$2
-	debug "What is up with these: "
 	debug "Player hand ${player_hand_ref[@]}"
 	debug "Dealer hand ${dealer_hand_ref[@]}"	
 	local player_total=$(hand_total "${player_hand_ref[@]}")
@@ -56,25 +55,35 @@ function end_logic() {
 	
 	debug "Totals: \n\tPlayer: $player_total \n\tDealer: $dealer_total"
 
+	local return_code
+	local message
+
 	if [[ $player_total -gt 21 ]]; then
-		echo "Player busted, dealer wins"
-		return 3
+		message="Player busted, dealer wins"
+		return_code=3
 	elif [[ $dealer_total -gt 21 ]]; then
-		echo "Dealer busted, player wins"
-		return 2
+		message="Dealer busted, player wins"
+		return_code=2
 	elif [[ $player_total == $dealer_total ]]; then
-		echo "Draw, it is a push"
-		return 4
+		message="Draw, it is a push"
+		return_code=4
 	elif [[ $player_total -gt $dealer_total ]]; then
-		echo "Player wins!"
-		return 2
+		message="Player wins!"
+		return_code=2
 	elif [[ $player_total -lt $dealer_total ]]; then
-		echo "Dealer wins :("
-		return 3
+		message="Dealer wins :("
+		return_code=3
 	else
-		echo "Something went wrong"
-		return 1
+		message="Something went wrong"
+		return_code=1
 	fi	
+
+	if [[ -n $UI ]]; then
+		draw_message "$message"
+	else
+		echo "$message"
+	fi
+	return $return_code
 
 }
 
@@ -98,19 +107,30 @@ function dealer_draw() {
 	local -n dealer_hand_ref=$2
 	local dealer_hand_arr=("${dealer_hand_ref[@]}")
 
-	echo "Dealer reveals their card, they have a ${dealer_hand_arr[0]}"
+	#TODO implement UI for this
+	debug "Dealer reveals their card, they have a ${dealer_hand_arr[0]}"
+	print_hand "dealer" "${dealer_hand_arr[@]}"
+	sleep 1
 	local dealer_total=$(hand_total "${dealer_hand_arr[@]}")
 	while [ $dealer_total -le 16 ]; do
 
-		
+		sleep 1
+
 		local new_card="${deck_ref[0]}"
 		deck_ref=( "${deck_ref[@]:1}" )
-
-		echo "Dealer drew: $new_card"
+		
 		dealer_hand_arr+=($new_card)
+		
+		if [[ -n $UI ]]; then
+			print_hand "dealer" "${dealer_hand_arr[@]}"
+		else
+			echo "Dealer drew: $new_card"
+		fi
+		
+
 		local dealer_total=$(hand_total "${dealer_hand_arr[@]}")
 	done
-	echo "Dealer total: $dealer_total"
+	debug "Dealer total: $dealer_total"
 	dealer_hand_ref=("${dealer_hand_arr[@]}")
 }
 
@@ -126,17 +146,30 @@ function game() {
 
 	local player_hand=(${player_hand[@]})
 	local dealer_hand=(${dealer_hand[@]})
-	echo "Dealer has ${dealer_hand[1]} showing"
-	echo "You have ${player_hand[@]}"
-	
-	(print_hand "player" "${player_hand[@]}")
-	(print_hand "dealer" "${dealer_hand[@]}")
+
+	if [[ -n $UI ]]; then
+
+		(print_hand "player" "${player_hand[@]}")
+		local hidden_dealer=( "??" ${dealer_hand[1]} )
+		(print_hand "dealer" "${hidden_dealer[@]}")
 		
+	else
+		echo "Dealer has ${dealer_hand[1]} showing"
+		echo "You have ${player_hand[@]}"
+	fi
+
 	# return 0
 
 	while true; do
 		if [[ $stop_draw == "false" ]]; then
-			printf 'Action: '
+			
+			
+			if [[ -n $UI ]]; then
+				draw_input "Action"
+			else
+				printf 'Action: '
+			fi
+			
 			local total=0
 			read -r response;
 		else
@@ -146,20 +179,27 @@ function game() {
 			"hit"|"h"|"draw"|"d"|"y"|"yes")
 				draw deck card
 				local player_hand+=($card)
-				echo "Player hand = ${player_hand[@]}"
+				
+				if [[ -n $UI ]]; then
+					print_hand "player" "${player_hand[@]}"
+				else
+					echo "Player hand = ${player_hand[@]}"
+				fi
+				
+				
 				if [[ -z "${deck[@]}" ]]; then
-					echo "deck is empty"
+					debug "deck is empty"
 					deck=( $(draw_deck $NUM_OF_DECKS) )
 				fi
 
 				local total=$(hand_total "${player_hand[@]}")
 				if [[ $total -gt 21 ]]; then
-					echo "You have busted with a value of $total"
+					debug "You have busted with a value of $total"
 					local stop_draw="true"
 				fi
 				;;
 			"double"|"dub"|"w")
-				echo "Attempting to double your bet and only get 1 more card"
+				debug "Attempting to double your bet and only get 1 more card"
 				# Must only have 2 cards in your hand
 				if [[ "${#player_hand[@]}" == 2 ]]; then
 					local new_bank=$(( $bank - $bet_amount )) 
@@ -171,24 +211,37 @@ function game() {
 
 						draw deck card
 						local player_hand+=($card)
-						echo "Player hand = ${player_hand[@]}"
+						if [[ -n $UI ]]; then
+		                                        print_hand "player" "${player_hand[@]}"
+		                                else
+		                                        echo "Player hand = ${player_hand[@]}"
+		                                fi
+
 						if [[ -z "${deck[@]}" ]]; then
-							echo "deck is empty"
+							debug "deck is empty"
 							deck=( $(draw_deck $NUM_OF_DECKS) )
 						fi
 
 						local stop_draw="true"
 
 					else
-						echo "You do not have enough money to double"
+						if [[ -n $UI ]]; then
+							draw_message "You do not have enough money to double"
+						else
+							echo "You do not have enough money to double"
+						fi
 					fi
 				else
-					echo "You can only double when you have 2 cards"
+					if [[-n $UI]]; then
+						draw_message "You can only double when you have 2 cards"
+					else
+						echo "You can only double when you have 2 cards"
+					fi
 				fi	
 				;;
 			"stand"|"stop"|"s")
 				local total=$(hand_total "${player_hand[@]}")
-				echo "You are standing with a value of $total"
+				debug "You are standing with a value of $total"
 				
 				dealer_draw deck dealer_hand
 				local dealer_total=$(hand_total "${dealer_hand[@]}")
@@ -197,13 +250,25 @@ function game() {
 				# 2=player win; 3=dealer win; 4=push; 21=blackjack win 
 				return $game_result
 				
-				;;
+			i	;;
 			"q"|"quit"|"exit")
 				echo "leaving the program"
 				return 0
 				;;
+			
+			"split")
+				if [[ -n $UI ]]; then
+					draw_message "Not allowed to split since this is a 2 deck blackjack format (I did not program it in yet)"
+				else
+					echo "Not allowed to split since this is a 2 deck blackjack format (I did not program it in yet)"
+				fi
+				;;
 			*)
-				printf "Valid command not found\n'hit' or 'h' to add a card\n'double' or 'dub' to double your bet and get only 1 more card\n'stand' or 's' to stand\n'quit' or 'q' to quit the program\n"
+				if [[ -n $UI ]]; then
+					draw_message "Not a valid command. 's' or 'stand' to stand. 'h', 'hit', or 'draw' to get another card. 'double' or 'dub' to double"
+				else
+					printf "Valid command not found\n'hit' or 'h' to add a card\n'double' or 'dub' to double your bet and get only 1 more card\n'stand' or 's' to stand\n'quit' or 'q' to quit the program\n"
+				fi
 		esac
 	done
 	return 0
@@ -214,15 +279,39 @@ function get_bet() {
 	local -n amount_ref=$2
 	local -n bank_ref=$1
 	while true; do
-		printf "Input valid bet: "
+		if [[ -n $UI ]]; then
+			draw_input "Bet"
+		else
+			printf "Input valid bet: "
+		fi
 		read -r amount_ref;
 		if [[ $amount_ref -gt $bank_ref ]]; then
-			echo "Bet too large"
+			if [[ -n $UI ]]; then
+				draw_message "Bet too large"
+			else
+				echo "Bet too large"
+			fi
 		elif [[ $amount_ref -lt 0 ]];then
-			echo "Bet can't be negative"
-		else
+			if [[ -n $UI ]]; then
+				draw_message "Bet can't be negative"
+			else
+				echo "Bet can't be negative"
+			fi
+		
+		elif [[ $amount_ref =~ ^[0-9]+$ ]]; then
+			
+			if [[ -n $UI ]]; then
+				clear_input "Action"
+			fi
 			bank_ref=$(( $bank_ref-$amount_ref ))
 			return 0
+		else
+			local message="Use a valid number"
+			if [[ -n $UI ]]; then
+				draw_message "$message"
+			else
+				echo "$message"
+			fi	
 		fi	
 	done
 }
@@ -250,7 +339,7 @@ function payout() {
 			bank_ref=$(($bank_ref + $new_winnings))
 			;;
 		*)
-			echo "There was an error somewhere"
+			debug "There was an error somewhere"
 			return 1
 			;;
 	esac
@@ -263,17 +352,58 @@ function main() {
 	fi
 	if [[ -n $UI ]]; then
 		echo "Running User Interface"
+
+		center_row=$((rows/2))
+        	center_col=$((cols/2))
+			
+		trap cleanup exit
+
+	        tput smcup
+       		tput civis
+
+		#This is assuming a 100 starting value
+		draw_ui
+
 	fi
 
 
 	bank=100
 	while true; do
-		echo "Starting cash $bank"
+		if [[ -n $UI ]]; then
+			clear_table		
+		else
+			echo "Starting cash $bank"
+		fi
+
 		get_bet bank bet_amount
+		if [[ -n $UI ]]; then
+			draw_chip_stack $bank
+		fi
 		game
 		local game_result=$?
+
+		#Bank not updating when I win?
 		payout bank bet_amount game_result
-		echo "Bank: $bank"
+		
+		
+		if [[ -n $UI ]]; then
+			draw_chip_stack $bank
+		else
+			echo "Bank: $bank"
+		fi
+
+		if [[ "$bank" -eq "0" ]]; then
+			if [[ -n $UI ]]; then
+				draw_message "Sorry $USER, you ran out of money. Go home!"
+				exit
+			else
+				echo "Sorry $USER, you ran out of money. Good bye!"
+			return 0	
+			fi
+		fi
+
+
+
 	done
 }
 

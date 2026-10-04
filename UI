@@ -42,6 +42,48 @@ function cleanup() {
 	return 0
 }
 
+function get_cut_string() {
+	echo $1 | cut -b $2-$3
+}
+
+function draw_message() {
+	tput sc
+	local message=$1
+
+	# Calulated by the size of the text box
+	local MAX_MSG_LENGTH=240
+
+	local art_w=$(art_width "$MESSAGE_BOX")
+        local starting_x="$((center_col-(art_w/2)))"
+        print_art "$MESSAGE_BOX" $starting_x  20
+
+
+	#local current_row=$(( $starting_x + 1 ))
+	local current_row=$(( 21 ))
+	local current_col=$(( $starting_x+1 ))
+	
+	local message_len=${#message}
+	local starting_char=1
+	
+	#local ending_char=$(( art_w - 2 ))
+	local ending_char=40
+	
+	while [[ $starting_char -lt $message_len ]]; do
+		
+		tput cup $current_row $current_col
+		current_row=$(($current_row + 1))	
+		local cut_string=$(get_cut_string "$message" $starting_char $ending_char)
+		echo -n  "$cut_string"
+		
+		starting_char=$(( ending_char + 1))
+		ending_char=$(( ending_char + 40))
+	done
+
+	read -ra nothing;
+	print_art "$BLACKJACK_ART" $starting_x 20
+	tput rc
+}
+
 function center_text_col() {
 	local text=$1
 	local text_len=${#text}
@@ -57,9 +99,11 @@ function draw_ui() {
 	local art_width=$(art_width "$BLACKJACK_ART")
 	local starting_x="$((center_col-(art_width/2)))"
 	print_art "$BLACKJACK_ART" $starting_x  20
-		
+	
 	draw_bottom bottom_line
-	draw_chip_stack
+	draw_chip_stack 100
+
+
 	return 0
 }
 
@@ -100,12 +144,14 @@ function draw_table() {
 }
 
 function draw_chip_stack() {
-	local chips=20
+	local chips=$1
 	local start_col=$(( $COLUMNS - 20 ))
 	local start_row=$(( $rows - 10 ))
+	
 	print_chip_stack $(($chips / 100)) $start_col $start_row
 	tput cup $(($start_row+1)) $start_col
-	echo -n "Chips: $chips"
+	echo -n "Chips: $chips    "
+
 }
 
 function draw_bottom() {
@@ -119,13 +165,13 @@ function draw_bottom() {
 }
 
 function draw_input() {
-
+	local prompt=$1
 	local start_col=10
 	local start_row=$(( $rows - 11 ))
 	print_art "$INPUT_BOX" $start_col $start_row
 	#tput cup $(($start_col+1)) $(($start_row+1))
 	tput cup 54 11
-	echo -n "Action: "
+	echo -n "$prompt: "
 	
 }
 
@@ -146,10 +192,10 @@ function print_hand() {
 	else	
 		echo "Something went wrong "
 	fi
-	local affected_rows=$(($row+2))
-	for i in $(seq $row $affected_rows);do
-		draw_horizontal_line $i ' '
+	for i in $(seq $(($row-2)) $row);do
+		tput setab 2; draw_horizontal_line $i ' '
 	done
+	tput sgr0
 
 
 	for card in "${hand[@]}"; do
@@ -161,11 +207,19 @@ function print_hand() {
 }
 
 function clear_input() {
+	local prompt=$1
 	local start_col=11
 	local start_row=$(( $rows - 10 ))
 
+	local INPUT_WINDOW_SIZE=21
+	
+	prompt+=':'
+	for ((i=${#prompt};i<=$INPUT_WINDOW_SIZE;++i));do
+		prompt+=' '
+	done
+
 	tput cup $start_row $start_col
-        echo -n "Action:               "
+        echo -n "$prompt"
 	tput cup $start_row $(( $start_col + 8 ))
 
 }
@@ -189,7 +243,7 @@ cols=$COLUMNS
 rows=$LINES
 
 
-function main() {
+function ui_main() {
 	echo "Running the UI"
 
 	center_row=$((rows/2))
@@ -221,23 +275,24 @@ function main() {
 	print_card "4H" 53 10
 	print_card "10D" 59 10
 	
-	draw_input
+	draw_input "Action"
 	local bottom_line=$(( $rows - 20 ))
 
+	draw_message "This is a bit of a longer message meant to convey some real important info. But what if I jsutkeep going and going, I will eventually run out of spac/e "
 	while read -ra data; do
 		#echo "data: $data"
 		if [[ $data = "clear" ]]; then
 			draw_table 2 $bottom_line
 	
 		fi
-		clear_input
+		clear_input "Action"
 		
 	done;
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
 	echo "Running UI"
-	main
+	ui_main
 fi
 
 
@@ -250,3 +305,4 @@ fi
 # to get pid of previously run background task
 # local pid=$!
 # wait "$pid" #Waits until the pid task is closed/exited
+

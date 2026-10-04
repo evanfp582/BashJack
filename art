@@ -51,6 +51,13 @@ function print_chip_stack() {
 		echo -n "$CHIP"
 		((y--))
 	done
+
+	for i in $(seq 1 5); do
+		tput cup $y $x
+		echo -n "      "
+		((y--))
+	done
+
 	tput sgr0
 }
 
@@ -77,13 +84,15 @@ function print_card() {
 		"H")
 			echo -n "│${card_digit}♥│"
 			;;
+		*)
+			echo -n "|   |"
+			;;
 	esac
 	tput cup $((y-2)) $x
 	echo -n "┌───┐"
 
-
-
 }
+
 
 IFS= read -d '' -r BLACKJACK_ART <<"EOF"
 ______ _            _    _            _    
@@ -104,6 +113,17 @@ IFS= read -d '' -r INPUT_BOX<<"EOF"
 ┌──────────────────────┐
 │                      │
 └──────────────────────┘
+EOF
+
+IFS= read -d '' -r MESSAGE_BOX<<"EOF"
+┌─────────────────────────────────────────┐
+│                                         │
+│                                         │
+│                                         │
+│                                         │
+│                                         │
+│        ~Press Enter to Continue~        │
+└─────────────────────────────────────────┘
 EOF
 
 
