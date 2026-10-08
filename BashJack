@@ -6,7 +6,7 @@
 . ./UI
 
 # Constants
-NUM_OF_DECKS=1
+NUM_OF_DECKS=2
 
 function end_logic() {
 	# I am taking the return code to mean if the code failed to run
@@ -107,9 +107,12 @@ function dealer_draw() {
 	local -n dealer_hand_ref=$2
 	local dealer_hand_arr=("${dealer_hand_ref[@]}")
 
-	#TODO implement UI for this
-	debug "Dealer reveals their card, they have a ${dealer_hand_arr[0]}"
-	print_hand "dealer" "${dealer_hand_arr[@]}"
+	if [[ -n $UI ]]; then
+		print_hand "dealer" "${dealer_hand_arr[@]}"
+	else
+		debug "Dealer reveals their card, they have a ${dealer_hand_arr[0]}"
+	fi
+	
 	sleep 1
 	local dealer_total=$(hand_total "${dealer_hand_arr[@]}")
 	while [ $dealer_total -le 16 ]; do
@@ -131,6 +134,7 @@ function dealer_draw() {
 		local dealer_total=$(hand_total "${dealer_hand_arr[@]}")
 	done
 	debug "Dealer total: $dealer_total"
+	debug "deck_ref at this point ${deck_ref[@]}"
 	dealer_hand_ref=("${dealer_hand_arr[@]}")
 }
 
@@ -138,7 +142,8 @@ function dealer_draw() {
 
 
 function game() {
-	deck=( $(draw_deck $NUM_OF_DECKS) )
+	local -n deck_ref=$1
+	local deck=( "${deck_ref[@]}" )
 	local stop_draw="false"
 	debug "deck before drawing: ${deck[@]}"
 	
@@ -244,9 +249,16 @@ function game() {
 				debug "You are standing with a value of $total"
 				
 				dealer_draw deck dealer_hand
+				debug "Deck right after: ${deck[@]}"
 				local dealer_total=$(hand_total "${dealer_hand[@]}")
 				end_logic player_hand dealer_hand
 				local game_result=$?
+				
+				debug "Setting deck_ref to deck"	
+				deck_ref=( "${deck[@]}" )
+				debug "Deck: ${deck[@]}"
+				debug "Deck ref: ${deck_ref[@]}"
+
 				# 2=player win; 3=dealer win; 4=push; 21=blackjack win 
 				return $game_result
 				
@@ -280,6 +292,9 @@ function game() {
 				fi
 		esac
 	done
+
+	debug "Setting deck_ref to deck 2"	
+	deck_ref=( "${deck[@]}" )
 	return 0
 
 }
@@ -377,6 +392,8 @@ function main() {
 
 
 	bank=100
+	deck=( $(draw_deck $NUM_OF_DECKS) )
+
 	while true; do
 		if [[ -n $UI ]]; then
 			clear_table		
@@ -389,8 +406,10 @@ function main() {
 			draw_chip_stack $bank
 			print_bet $bet_amount
 		fi
-		game
+		echo "Deck before game '${deck[@]}'"
+		game deck
 		local game_result=$?
+		echo "Deck after  game '${deck[@]}'"
 
 		#Bank not updating when I win?
 		payout bank bet_amount game_result
