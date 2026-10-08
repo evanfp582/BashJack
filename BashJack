@@ -27,21 +27,24 @@ function end_logic() {
 	local player_bj=$(is_blackjack "${player_hand_ref[@]}")
 	local dealer_bj=$(is_blackjack "${dealer_hand_ref[@]}")
 
+	local return_code
+	local message
+
 	# Making it 1 string so I can use a CASE statement rather than a nest of if else
 	local concat="${player_bj}${dealer_bj}"
 	debug "Concatinated player_blackjack dealer_blackjack results: $concat"
 	case $concat in 
 		"truetrue")
-			# Both blackjack, push
-			return 4
+			message="Both blackjack, push"
+			return_code=4
 			;;
 		"truefalse")
-			# You got blackjack, dealer does not
-			return 21
+			message="You got blackjack, dealer does not"
+			return_code=21
 			;;
 		"falsetrue")
-			# Dealer has blackjack, you do not
-			return 3
+			message="Dealer has blackjack, you do not"
+			return_code=3
 			;;
 		"falsefalse")
 			# Nothing special here
@@ -49,14 +52,18 @@ function end_logic() {
 	esac
 
 
+	if [[ -n $return_code ]]; then
+		if [[ -n $UI ]]; then
+			draw_message "$message"
+		fi
+		return $return_code
+	fi
 	
 	#echo "player_total: $player_total"
 	#echo "dealer_total: $dealer_total"
 	
 	debug "Totals: \n\tPlayer: $player_total \n\tDealer: $dealer_total"
 
-	local return_code
-	local message
 
 	if [[ $player_total -gt 21 ]]; then
 		message="Player busted, dealer wins"
@@ -392,7 +399,7 @@ function main() {
 
 
 	bank=100
-	deck=( $(draw_deck $NUM_OF_DECKS) )
+	global_deck=( $(draw_deck $NUM_OF_DECKS) )
 
 	while true; do
 		if [[ -n $UI ]]; then
@@ -406,10 +413,8 @@ function main() {
 			draw_chip_stack $bank
 			print_bet $bet_amount
 		fi
-		echo "Deck before game '${deck[@]}'"
-		game deck
+		game global_deck
 		local game_result=$?
-		echo "Deck after  game '${deck[@]}'"
 
 		#Bank not updating when I win?
 		payout bank bet_amount game_result
