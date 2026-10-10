@@ -406,6 +406,16 @@ function main() {
 	if [[ -n $UI ]]; then
 		echo "Running User Interface"
 
+		if [[ $rows -lt 43 ]]; then
+			echo "Not starting UI. Provided window has $rows rows, minimum is 43" 1>&2
+			exit 1
+		fi
+
+		if [[ $cols -lt 65 ]]; then
+			echo "Not starting UI. Provided window has $cols columns, minimum is 65" 1>&2
+			exit 1
+		fi
+
 		center_row=$((rows/2))
         	center_col=$((cols/2))
 			

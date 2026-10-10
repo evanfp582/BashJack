@@ -50,16 +50,23 @@ function draw_message() {
 	tput sc
 	local message=$1
 
-	# Calulated by the size of the text box
+	local bottom_line=$(( $rows - 15 )) 
+	
+	#Calulated by the size of the text box
 	local MAX_MSG_LENGTH=240
 
 	local art_w=$(art_width "$MESSAGE_BOX")
         local starting_x="$((center_col-(art_w/2)))"
-        print_art "$MESSAGE_BOX" $starting_x  20
+
+	local mid_table_row=$((($bottom_line - 2) / 2))
+        # Since We print top to bottom, get the mid row - half the art height
+        local starting_row=$(($mid_table_row - 2))
+
+        print_art "$MESSAGE_BOX" $starting_x  $starting_row
 
 
-	#local current_row=$(( $starting_x + 1 ))
-	local current_row=$(( 21 ))
+	local current_row=$(( $starting_row + 1 ))
+	#local current_row=$(( 21 ))
 	local current_col=$(( $starting_x+1 ))
 	
 	local message_len=${#message}
@@ -80,7 +87,7 @@ function draw_message() {
 	done
 
 	read -ra nothing;
-	print_art "$BLACKJACK_ART" $starting_x 20
+	print_art "$BLACKJACK_ART" $starting_x $starting_row
 	tput rc
 }
 
@@ -92,13 +99,19 @@ function center_text_col() {
 }
 
 function draw_ui() {
+	
 	draw_top 2
-	local bottom_line=$(( $rows - 20 ))
+	local bottom_line=$(( $rows - 15 ))
 	draw_table 2 $bottom_line
 	
 	local art_width=$(art_width "$BLACKJACK_ART")
 	local starting_x="$((center_col-(art_width/2)))"
-	print_art "$BLACKJACK_ART" $starting_x  20
+	
+	local mid_table_row=$((($bottom_line - 2) / 2))
+	# Since We print top to bottom, get the mid row - half the art height
+	local starting_row=$(($mid_table_row - 2))	
+
+	print_art "$BLACKJACK_ART" $starting_x  $starting_row
 	
 	draw_bottom bottom_line
 	draw_chip_stack 100
@@ -109,7 +122,7 @@ function draw_ui() {
 }
 
 function draw_deck_back() {
-	local row=5
+	local row=4
 	local center_col=$(( $cols / 2 ))
 	local starting_col=$(( $center_col + ($center_col / 2)))
 	print_art "$CARD_BACK" $starting_col $row
@@ -162,7 +175,7 @@ function draw_table() {
 function draw_chip_stack() {
 	local chips=$1
 	local start_col=$(( $COLUMNS - 26 ))
-	local start_row=$(( $rows - 10 ))
+	local start_row=$(( $rows - 5 ))
 	
 	print_chip_stack $chips $start_col $start_row
 	tput cup $(($start_row+1)) $start_col
@@ -185,8 +198,7 @@ function draw_input() {
 	local start_col=10
 	local start_row=$(( $rows - 11 ))
 	print_art "$INPUT_BOX" $start_col $start_row
-	#tput cup $(($start_col+1)) $(($start_row+1))
-	tput cup 54 11
+	tput cup $(($start_row+1)) $(($start_col+1)) 
 	echo -n "$prompt: "
 	
 }
@@ -202,9 +214,9 @@ function print_hand() {
 	local starting_col=$(( $center_col - ( 2 * $hand_size + ( $hand_size - 2))))
 
 	if [ "$1" == "player" ]; then
-		local row=$(( $rows -24 ))
+		local row=$(( $rows -17 ))
 	elif [ "$1" == "dealer" ]; then
-		local row=10
+		local row=9
 	else	
 		echo "Something went wrong "
 	fi

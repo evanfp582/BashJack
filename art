@@ -116,7 +116,7 @@ function print_bet() {
 	fi
 	
 		
-	local starting_col=$(($LINES - 31))
+	local starting_col=$(($LINES - 23))
 	local a_width=$(art_width "$TOP_CHIP")
 	local center_col=$(( ($COLUMNS/2) -1))
 	local starting_x="$((center_col-(art_width/2)))"
