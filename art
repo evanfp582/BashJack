@@ -149,7 +149,7 @@ function print_card() {
 			echo -n "│${card_digit}♥│"
 			;;
 		*)
-			echo -n "|   |"
+			echo -n "|███|"
 			;;
 	esac
 	tput cup $((y-2)) $x
@@ -157,6 +157,11 @@ function print_card() {
 
 }
 
+IFS= read -d '' -r CARD_BACK <<"EOF"
+┌───┐
+|███|
+└───┘
+EOF
 
 IFS= read -d '' -r BLACKJACK_ART <<"EOF"
 ______ _            _    _            _    

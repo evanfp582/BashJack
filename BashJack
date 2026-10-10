@@ -124,6 +124,15 @@ function dealer_draw() {
 	local dealer_total=$(hand_total "${dealer_hand_arr[@]}")
 	while [ $dealer_total -le 16 ]; do
 
+		if [[ -z "${deck_ref[@]}" ]]; then
+			if [[ -n $UI ]]; then
+ 				erase_deck_back
+				draw_message "Shuffling deck"
+				draw_deck_back
+			fi
+			debug "deck is empty"
+			deck_ref=( $(draw_deck $NUM_OF_DECKS) )
+		fi
 		sleep 1
 
 		local new_card="${deck_ref[0]}"
@@ -137,7 +146,6 @@ function dealer_draw() {
 			echo "Dealer drew: $new_card"
 		fi
 		
-
 		local dealer_total=$(hand_total "${dealer_hand_arr[@]}")
 	done
 	debug "Dealer total: $dealer_total"
@@ -153,6 +161,17 @@ function game() {
 	local deck=( "${deck_ref[@]}" )
 	local stop_draw="false"
 	debug "deck before drawing: ${deck[@]}"
+
+	if [[ "${#deck[@]}" -lt 4 ]]; then
+		if [[ -n $UI ]]; then
+ 			erase_deck_back
+			draw_message "Shuffling deck"
+			draw_deck_back
+		fi
+		debug "deck is empty"
+		deck=( $(draw_deck $NUM_OF_DECKS) )
+	fi
+
 	
 	initial_deal deck dealer_hand player_hand
 
@@ -170,9 +189,17 @@ function game() {
 		echo "You have ${player_hand[@]}"
 	fi
 
-	# return 0
-
 	while true; do
+		debug "Current deck: ${deck[@]}"
+		if [[ -z "${deck[@]}" ]]; then
+			if [[ -n $UI ]]; then
+ 				erase_deck_back
+				draw_message "Shuffling deck"
+				draw_deck_back
+			fi
+			debug "deck is empty"
+			deck=( $(draw_deck $NUM_OF_DECKS) )
+		fi
 		if [[ $stop_draw == "false" ]]; then
 			
 			
@@ -198,12 +225,6 @@ function game() {
 					echo "Player hand = ${player_hand[@]}"
 				fi
 				
-				
-				if [[ -z "${deck[@]}" ]]; then
-					debug "deck is empty"
-					deck=( $(draw_deck $NUM_OF_DECKS) )
-				fi
-
 				local total=$(hand_total "${player_hand[@]}")
 				if [[ $total -gt 21 ]]; then
 					debug "You have busted with a value of $total"
@@ -229,11 +250,6 @@ function game() {
 		                                        echo "Player hand = ${player_hand[@]}"
 		                                fi
 
-						if [[ -z "${deck[@]}" ]]; then
-							debug "deck is empty"
-							deck=( $(draw_deck $NUM_OF_DECKS) )
-						fi
-
 						local stop_draw="true"
 
 					else
@@ -256,15 +272,11 @@ function game() {
 				debug "You are standing with a value of $total"
 				
 				dealer_draw deck dealer_hand
-				debug "Deck right after: ${deck[@]}"
 				local dealer_total=$(hand_total "${dealer_hand[@]}")
 				end_logic player_hand dealer_hand
 				local game_result=$?
 				
-				debug "Setting deck_ref to deck"	
 				deck_ref=( "${deck[@]}" )
-				debug "Deck: ${deck[@]}"
-				debug "Deck ref: ${deck_ref[@]}"
 
 				# 2=player win; 3=dealer win; 4=push; 21=blackjack win 
 				return $game_result
@@ -291,6 +303,16 @@ function game() {
 					echo "$message"
 				fi
 				;;
+			"rules"|"rule")
+				local message="2 Decks. Dealer stands on soft 17. 3-2 Blackjack payout!"
+
+				if [[ -n $UI ]]; then
+					draw_message "$message"
+				else
+					echo "$message"
+				fi
+				;;
+
 			*)
 				if [[ -n $UI ]]; then
 					draw_message "Not a valid command. 's' or 'stand' to stand. 'h', 'hit', or 'draw' to get another card. 'double' or 'dub' to double"
@@ -400,7 +422,6 @@ function main() {
 
 	bank=100
 	global_deck=( $(draw_deck $NUM_OF_DECKS) )
-
 	while true; do
 		if [[ -n $UI ]]; then
 			clear_table		

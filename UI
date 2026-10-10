@@ -103,8 +103,24 @@ function draw_ui() {
 	draw_bottom bottom_line
 	draw_chip_stack 100
 
+	draw_deck_back
 
 	return 0
+}
+
+function draw_deck_back() {
+	local row=5
+	local center_col=$(( $cols / 2 ))
+	local starting_col=$(( $center_col + ($center_col / 2)))
+	print_art "$CARD_BACK" $starting_col $row
+}
+
+function erase_deck_back() {
+	tput setab 2
+	draw_horizontal_line 5 ' '
+	draw_horizontal_line 6 ' '
+	draw_horizontal_line 7 ' '
+	tput sgr0
 }
 
 function draw_horizontal_line() {
