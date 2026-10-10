@@ -10,8 +10,15 @@ Executed with ./BashJack
 ### Debug mode  
 DEBUG=1 ./BashJack  
 
-### With a UI (kind of the indended use)
+## With a UI Intended Use
 UI=1 ./BashJack  
+
+### UI
+<img width="1890" height="973" alt="image" src="https://github.com/user-attachments/assets/2a2dcf6f-6642-4bf8-b24f-93ff0cb3e769" />
+
+
+### Minimum screen size 65x43
+<img width="531" height="652" alt="image" src="https://github.com/user-attachments/assets/ed0d1899-dfe7-430b-9562-f5d58504c977" />
 
 
 ## At this point, unless you are a curious developer, this is unimportant 
